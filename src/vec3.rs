@@ -17,6 +17,13 @@ impl Vec3 {
         }
     }
 
+    pub const fn splat(val: f64) -> Self {
+        Self { x: val, y: val, z: val }
+    }
+
+    pub const ZERO: Self = Self::splat(0.0);
+    pub const ONE: Self = Self::splat(1.0);
+
     pub fn dot(&self, rhs: &Vec3) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
@@ -40,7 +47,6 @@ impl Vec3 {
     pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
-
 
     pub fn x(&self) -> f64 {
         self.x
