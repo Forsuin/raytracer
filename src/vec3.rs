@@ -1,4 +1,5 @@
 use std::{fmt::Display, ops};
+use std::ops::Mul;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
@@ -138,6 +139,18 @@ impl ops::Mul<Vec3> for Vec3 {
             x: self.x * rhs.x,
             y: self.y * rhs.y,
             z: self.z * rhs.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
         }
     }
 }
