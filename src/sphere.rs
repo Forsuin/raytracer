@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use crate::vec3::Vec3;
@@ -37,15 +39,21 @@ impl Hittable for Sphere {
         
         if root <= tmin || tmax <= root {
             root = (h + sqrtd) / a;
-            if (root <= tmin || tmax <= root) {
+            if root <= tmin || tmax <= root {
                 return None
             }
         }
         
-        Some(HitRecord {
+        let mut hr = HitRecord {
             point: ray.at(root),
-            normal: (ray.at(root) - self.center) / self.radius,
+            normal: Vec3::ZERO,
             t: root,
-        })
+            front_face: false,
+        };
+
+        let outward_normal = (hr.point - self.center) / self.radius;
+        hr.set_face_normal(ray, outward_normal);
+
+        Some(hr)
     }
 }
