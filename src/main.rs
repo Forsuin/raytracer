@@ -57,10 +57,6 @@ fn main() {
     // eprintln!("\rDone!");
 }
 
-pub fn hit_sphere(center: Vec3, radius: f64, ray: &Ray) -> f64 {
-
-}
-
 pub fn ray_color(ray: &Ray) -> Color {
     let t = hit_sphere(Vec3::new(0., 0., -1.), 0.5, ray);
 
