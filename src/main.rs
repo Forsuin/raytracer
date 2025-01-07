@@ -1,4 +1,6 @@
+use raytracer::hittable::{Hittable, HittableList};
 use raytracer::ray::Ray;
+use raytracer::sphere::Sphere;
 use raytracer::vec3::*;
 
 type Color = Vec3;
@@ -36,6 +38,14 @@ fn main() {
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
 
+    // World
+
+    let mut world = HittableList { objects: vec![] };
+
+    world.add(Sphere::new(Vec3::new(0., 0., -1.), 0.5));
+    world.add(Sphere::new(Vec3::new(0., -100.5, -1.), 100.));
+
+
     // Render
 
     println!("P3\n{} {}\n255", WIDTH, height);
@@ -48,7 +58,7 @@ fn main() {
             let ray = Ray::new(camera_center, ray_direction);
 
 
-            let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color(&ray, &world);
 
             write_color(&pixel_color);
         }
@@ -57,13 +67,12 @@ fn main() {
     // eprintln!("\rDone!");
 }
 
-pub fn ray_color(ray: &Ray) -> Color {
-    let t = hit_sphere(Vec3::new(0., 0., -1.), 0.5, ray);
-
-    if t > 0.0 {
-        let n = (ray.at(t) - Vec3::new(0., 0., -1.)).unit_vector();
-        return 0.5 * Color::new(n.x + 1., n.y + 1., n.z + 1.);
+pub fn ray_color(ray: &Ray, world: &HittableList) -> Color {
+    if let Some(hit) = world.hit(ray, 0.0, f64::INFINITY) {
+        return 0.5 * (hit.normal + Color::new(1., 1., 1.));
     }
+
+    // sky color
 
     let unit_direction = ray.direction.unit_vector();
     let a = 0.5 * (unit_direction.y + 1.0);
