@@ -120,9 +120,9 @@ impl Camera {
 }
 
 fn write_color(color: &Color) {
-    let r = color.x();
-    let g = color.y();
-    let b = color.z();
+    let r = color.x;
+    let g = color.y;
+    let b = color.z;
 
     // Translate the [0, 1] component values to the range [0, 255]
     let intensity = Interval::new(0., 0.999);

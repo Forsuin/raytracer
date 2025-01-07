@@ -31,10 +31,10 @@ impl Vec3 {
     }
 
     pub fn cross(&self, rhs: &Vec3) -> Vec3 {
-        Self{
-            x: self.y() * rhs.z() - self.z() * rhs.y(),
-            y: self.z() * rhs.x() - self.x() * rhs.z(),
-            z: self.x() * rhs.y() - self.y() * rhs.x(),
+        Self {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
         }
     }
 
@@ -48,18 +48,6 @@ impl Vec3 {
 
     pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
-    }
-
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-
-    pub fn z(&self) -> f64 {
-        self.z
     }
 }
 
