@@ -1,6 +1,8 @@
 use std::{fmt::Display, ops};
 use std::ops::Mul;
 
+pub type Color = Vec3;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
     pub x: f64,
