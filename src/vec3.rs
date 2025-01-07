@@ -1,5 +1,6 @@
-use std::{fmt::Display, ops};
+use rand::Rng;
 use std::ops::Mul;
+use std::{fmt::Display, ops};
 
 pub type Color = Vec3;
 
@@ -11,12 +12,33 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    // Constructs new Vec3 from given values
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self {
             x,
             y,
             z,
         }
+    }
+
+    // Creates new Vec3 with each component being randomly in the range [0.0, 1.0]
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        Vec3::new(
+            rng.gen_range(0.0..=1.0),
+            rng.gen_range(0.0..=1.0),
+            rng.gen_range(0.0..=1.0),
+        )
+    }
+
+    // Creates new Vec3 with each component being randomly in the range [min, max]
+    pub fn random_range(min: f64, max: f64) -> Self {
+        let mut rng = rand::thread_rng();
+        Vec3::new(
+            rng.gen_range(min..=max),
+            rng.gen_range(min..=max),
+            rng.gen_range(min..=max),
+        )
     }
 
     pub const fn splat(val: f64) -> Self {
@@ -40,7 +62,27 @@ impl Vec3 {
 
     pub fn unit_vector(self) -> Vec3 {
         self / self.length()
-    } 
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p = Vec3::random_range(-1., 1.);
+            let lensq = p.length_squared();
+            if 1e-160 < lensq && lensq <= 1.0 {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Self::random_unit_vector();
+        if on_unit_sphere.dot(normal) > 0.0 {
+            // in same hemisphere as normal
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
+    }
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
