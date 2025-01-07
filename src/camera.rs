@@ -87,7 +87,7 @@ impl Camera {
 
     fn ray_color(&self, ray: &Ray, depth: i32, world: &HittableList) -> Color {
         if depth <= 0 {
-            return Color::ZERO
+            return Color::ZERO;
         }
 
         if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
@@ -131,6 +131,11 @@ fn write_color(color: &Color) {
     let g = color.y;
     let b = color.z;
 
+    // Apply linear to gamma transform for gama 2
+    let r = linear_to_gamma(r);
+    let g = linear_to_gamma(g);
+    let b = linear_to_gamma(b);
+
     // Translate the [0, 1] component values to the range [0, 255]
     let intensity = Interval::new(0., 0.999);
     let r = (256. * intensity.clamp(r)) as u32;
@@ -138,4 +143,13 @@ fn write_color(color: &Color) {
     let b = (256. * intensity.clamp(b)) as u32;
 
     println!("{r} {g} {b}");
+}
+
+#[inline]
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    if linear_component > 0.0 {
+        linear_component.sqrt()
+    } else {
+        0.0
+    }
 }
