@@ -9,6 +9,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub width: i32,
     pub samples_per_pixel: i32,
+    pub max_depth: i32,
 
     height: i32,
     center: Vec3,
@@ -24,6 +25,7 @@ impl Camera {
             aspect_ratio: 1.0,
             width: 100,
             samples_per_pixel: 10,
+            max_depth: 10,
             ..Default::default()
         }
     }
@@ -44,7 +46,7 @@ impl Camera {
 
                 for _sample in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    pixel_color += self.ray_color(&ray, world);
+                    pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
 
                 write_color(&(self.pixel_samples_scale * pixel_color));
@@ -83,9 +85,14 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &HittableList) -> Color {
-        if let Some(hit) = world.hit(ray, Interval::new(0., f64::INFINITY)) {
-            return 0.5 * (hit.normal + Color::new(1., 1., 1.));
+    fn ray_color(&self, ray: &Ray, depth: i32, world: &HittableList) -> Color {
+        if depth <= 0 {
+            return Color::ZERO
+        }
+
+        if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+            let direction = hit.normal + Vec3::random_unit_vector();
+            return 0.5 * self.ray_color(&Ray::new(hit.point, direction), depth - 1, world);
         }
 
         // sky color

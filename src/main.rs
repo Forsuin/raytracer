@@ -15,6 +15,7 @@ fn main() {
     camera.aspect_ratio = 16.0 / 9.0;
     camera.width = 400;
     camera.samples_per_pixel = 100;
+    camera.max_depth= 40;
 
     camera.render(&world)
 }
