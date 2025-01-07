@@ -2,16 +2,20 @@ use crate::hittable::{Hittable, HittableList};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
+use rand::Rng;
 
 #[derive(Default)]
 pub struct Camera {
     pub aspect_ratio: f64,
     pub width: i32,
+    pub samples_per_pixel: i32,
+
     height: i32,
     center: Vec3,
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    pixel_samples_scale: f64,
 }
 
 impl Camera {
@@ -19,6 +23,7 @@ impl Camera {
         Self {
             aspect_ratio: 1.0,
             width: 100,
+            samples_per_pixel: 10,
             ..Default::default()
         }
     }
@@ -31,16 +36,18 @@ impl Camera {
         println!("P3\n{} {}\n255", self.width, self.height);
 
         for y in 0..self.height {
-            // eprintln!("\rScanlines Remaining: {}", y - 1);
+            if y % 10 == 0 {
+                eprintln!("\rScanlines Remaining: {}", (self.height - y));
+            }
             for x in 0..self.width {
-                let pixel_center = self.pixel00_loc + (x as f64 * self.pixel_delta_u) + (y as f64 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
+                let mut pixel_color = Color::ZERO;
 
+                for _sample in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    pixel_color += self.ray_color(&ray, world);
+                }
 
-                let pixel_color = self.ray_color(&ray, &world);
-
-                write_color(&pixel_color);
+                write_color(&(self.pixel_samples_scale * pixel_color));
             }
         }
 
@@ -50,6 +57,8 @@ impl Camera {
     fn initialize(&mut self) {
         let height = (self.width as f64 / self.aspect_ratio) as i32;
         self.height = if height < 1 { 1 } else { height };
+
+        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
 
         self.center = Vec3::ZERO;
         let focal_length = 1.0;
@@ -85,6 +94,29 @@ impl Camera {
         let a = 0.5 * (unit_direction.y + 1.0);
         (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
+
+    fn get_ray(&self, x: i32, y: i32) -> Ray {
+        // Construct a camera ray originating from the orign and directed at randomly sampled
+        // point around the pixel location (x, y)
+
+        let offset = self.sample_square();
+        let pixel_sample = self.pixel00_loc
+            + ((x as f64 + offset.x) * self.pixel_delta_u)
+            + ((y as f64 + offset.y) * self.pixel_delta_v);
+        let ray_origin = self.center;
+        let ray_direction = pixel_sample - ray_origin;
+
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn sample_square(&self) -> Vec3 {
+        // Returns the vector to a random point in the [-0.5, -0.5] - [0.5, 0.5] unit square
+        let mut rng = rand::thread_rng();
+
+        Vec3::new(rng.gen_range(0.0..=1.0) - 0.5,
+                  rng.gen_range(0.0..=1.0) - 0.5,
+                  0.)
+    }
 }
 
 fn write_color(color: &Color) {
@@ -92,9 +124,11 @@ fn write_color(color: &Color) {
     let g = color.y();
     let b = color.z();
 
-    let r = (255.999 * r) as u32;
-    let g = (255.999 * g) as u32;
-    let b = (255.999 * b) as u32;
+    // Translate the [0, 1] component values to the range [0, 255]
+    let intensity = Interval::new(0., 0.999);
+    let r = (256. * intensity.clamp(r)) as u32;
+    let g = (256. * intensity.clamp(g)) as u32;
+    let b = (256. * intensity.clamp(b)) as u32;
 
     println!("{r} {g} {b}");
 }
