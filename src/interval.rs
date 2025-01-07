@@ -23,6 +23,16 @@ impl Interval {
         self.min < x && x < self.max
     }
 
+    pub fn clamp(&self, x: f64) -> f64 {
+        if x < self.min {
+            self.min
+        } else if x > self.max {
+            self.max
+        } else {
+            x
+        }
+    }
+
     pub const EMPTY: Self = Self { min: f64::INFINITY, max: f64::NEG_INFINITY };
     pub const UNIVERSE: Self = Self { min: f64::NEG_INFINITY, max: f64::INFINITY };
 }
@@ -31,7 +41,7 @@ impl Default for Interval {
     fn default() -> Self {
         Self {
             min: f64::NEG_INFINITY,
-            max: f64::INFINITY
+            max: f64::INFINITY,
         }
     }
 }
