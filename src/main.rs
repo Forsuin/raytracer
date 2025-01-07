@@ -1,4 +1,5 @@
 use raytracer::hittable::{Hittable, HittableList};
+use raytracer::interval::Interval;
 use raytracer::ray::Ray;
 use raytracer::sphere::Sphere;
 use raytracer::vec3::*;
@@ -68,7 +69,7 @@ fn main() {
 }
 
 pub fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-    if let Some(hit) = world.hit(ray, 0.0, f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, Interval::new(0., f64::INFINITY)) {
         return 0.5 * (hit.normal + Color::new(1., 1., 1.));
     }
 
