@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::ops::{Mul, Sub};
+use std::ops::{Add, Mul, Sub};
 use std::{fmt::Display, ops};
 
 pub type Color = Vec3;
@@ -132,7 +132,7 @@ impl ops::Div<Vec3> for Vec3 {
     }
 }
 
-impl ops::Add<Vec3> for Vec3 {
+impl Add<Vec3> for Vec3 {
     type Output = Self;
 
     fn add(self, rhs: Vec3) -> Self::Output {
@@ -141,6 +141,14 @@ impl ops::Add<Vec3> for Vec3 {
             y: self.y + rhs.y,
             z: self.z + rhs.z,
         }
+    }
+}
+
+impl Add<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        *self + rhs
     }
 }
 
