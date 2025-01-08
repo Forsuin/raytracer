@@ -91,8 +91,11 @@ impl Camera {
         }
 
         if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
-            let direction = hit.normal + Vec3::random_unit_vector();
-            return 0.5 * self.ray_color(&Ray::new(hit.point, direction), depth - 1, world);
+            return if let Some((scattered, attenuation)) = hit.material.scatter(ray, &hit) {
+                attenuation * self.ray_color(&scattered, depth - 1, world)
+            } else {
+                Color::ZERO
+            }
         }
 
         // sky color

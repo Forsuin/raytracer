@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::ops::Mul;
+use std::ops::{Mul, Sub};
 use std::{fmt::Display, ops};
 
 pub type Color = Vec3;
@@ -10,6 +10,8 @@ pub struct Vec3 {
     pub y: f64,
     pub z: f64,
 }
+
+
 
 impl Vec3 {
     // Constructs new Vec3 from given values
@@ -60,28 +62,13 @@ impl Vec3 {
         }
     }
 
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        (self.x.abs() < s) && (self.y.abs() < s) && (self.z.abs() < s)
+    }
+
     pub fn unit_vector(self) -> Vec3 {
         self / self.length()
-    }
-
-    pub fn random_unit_vector() -> Vec3 {
-        loop {
-            let p = Vec3::random_range(-1., 1.);
-            let lensq = p.length_squared();
-            if 1e-160 < lensq && lensq <= 1.0 {
-                return p / lensq.sqrt();
-            }
-        }
-    }
-
-    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
-        let on_unit_sphere = Self::random_unit_vector();
-        if on_unit_sphere.dot(normal) > 0.0 {
-            // in same hemisphere as normal
-            on_unit_sphere
-        } else {
-            -on_unit_sphere
-        }
     }
 
     pub fn length(&self) -> f64 {
@@ -157,7 +144,7 @@ impl ops::Add<Vec3> for Vec3 {
     }
 }
 
-impl ops::Sub<Vec3> for Vec3 {
+impl Sub<Vec3> for Vec3 {
     type Output = Self;
 
     fn sub(self, rhs: Vec3) -> Self::Output {
@@ -169,7 +156,19 @@ impl ops::Sub<Vec3> for Vec3 {
     }
 }
 
-impl ops::Mul<Vec3> for Vec3 {
+impl Sub<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
     type Output = Self;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
@@ -185,6 +184,18 @@ impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
+impl Mul<&Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: &Vec3) -> Self::Output {
         Vec3 {
             x: self * rhs.x,
             y: self * rhs.y,
