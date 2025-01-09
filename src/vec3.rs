@@ -43,15 +43,6 @@ impl Vec3 {
         )
     }
 
-    pub fn random_in_unit_disk() -> Vec3 {
-        loop {
-            let point = Vec3::new(random(), random(), 0.0);
-            if point.length_squared() < 1.0 {
-                return point;
-            }
-        }
-    }
-
     pub const fn splat(val: f64) -> Self {
         Self { x: val, y: val, z: val }
     }
