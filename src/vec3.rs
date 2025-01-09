@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{random, Rng};
 use std::ops::{Add, Mul, Sub};
 use std::{fmt::Display, ops};
 
@@ -41,6 +41,15 @@ impl Vec3 {
             rng.gen_range(min..=max),
             rng.gen_range(min..=max),
         )
+    }
+
+    pub fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let point = Vec3::new(random(), random(), 0.0);
+            if point.length_squared() < 1.0 {
+                return point;
+            }
+        }
     }
 
     pub const fn splat(val: f64) -> Self {
@@ -196,6 +205,18 @@ impl Mul<Vec3> for f64 {
             x: self * rhs.x,
             y: self * rhs.y,
             z: self * rhs.z,
+        }
+    }
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Vec3 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
         }
     }
 }
