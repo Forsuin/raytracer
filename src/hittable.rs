@@ -1,13 +1,13 @@
-use std::rc::Rc;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use std::sync::Arc;
 
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material + Send>,
     pub t: f64,
     pub front_face: bool,
 }
@@ -31,11 +31,13 @@ pub trait Hittable {
 }
 
 pub struct HittableList {
-    pub objects: Vec<Box<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable + Sync>>,
 }
 
+unsafe impl Send for HittableList {}
+
 impl HittableList {
-    pub fn add(&mut self, object: impl Hittable + 'static) {
+    pub fn add(&mut self, object: impl Hittable + 'static + Sync) {
         self.objects.push(Box::new(object));
     }
 

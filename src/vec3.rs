@@ -1,4 +1,4 @@
-use rand::{random, Rng};
+use rand::Rng;
 use std::ops::{Add, Mul, Sub};
 use std::{fmt::Display, ops};
 

@@ -3,6 +3,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 use rand::{random, Rng};
+use rayon::prelude::*;
 
 #[derive(Default)]
 pub struct Camera {
@@ -50,27 +51,54 @@ impl Camera {
         }
     }
 
+    fn render_band(&self, band: &mut [Vec3], world: &HittableList, y: i32) {
+        for x in 0..self.width {
+            let mut pixel_color = Color::ZERO;
+
+            for _sample in 0..self.samples_per_pixel {
+                let ray = self.get_ray(x, y);
+                pixel_color += self.ray_color(&ray, self.max_depth, world);
+            }
+
+            band[x as usize] = self.pixel_samples_scale * pixel_color;
+        }
+    }
+
     pub fn render(&mut self, world: &HittableList) {
         self.initialize();
 
         // Render
 
+        let mut pixels = vec![Vec3::ZERO; (self.width * self.height) as usize];
+        let mut bands: Vec<(usize, &mut [Vec3])> = pixels.chunks_mut(self.width as usize).enumerate().collect();
+
+
         println!("P3\n{} {}\n255", self.width, self.height);
 
-        for y in 0..self.height {
-            if y % 10 == 0 {
-                eprintln!("\rScanlines Remaining: {}", (self.height - y));
-            }
-            for x in 0..self.width {
-                let mut pixel_color = Color::ZERO;
 
-                for _sample in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(x, y);
-                    pixel_color += self.ray_color(&ray, self.max_depth, world);
-                }
+        bands.into_par_iter().for_each(|(i, band)| {
+            self.render_band(band, world, i as i32);
+        });
 
-                write_color(&(self.pixel_samples_scale * pixel_color));
-            }
+        // for y in 0..self.height {
+        //     if y % 10 == 0 {
+        //         eprintln!("\rScanlines Remaining: {}", (self.height - y));
+        //     }
+        //     for x in 0..self.width {
+        //         let mut pixel_color = Color::ZERO;
+        //
+        //         for _sample in 0..self.samples_per_pixel {
+        //             let ray = self.get_ray(x, y);
+        //             pixel_color += self.ray_color(&ray, self.max_depth, world);
+        //         }
+        //
+        //         write_color(&(self.pixel_samples_scale * pixel_color));
+        //     }
+        // }
+
+
+        for pixel in pixels {
+            write_color(&pixel);
         }
 
         // eprintln!("\rDone!");
