@@ -1,6 +1,7 @@
 use rand::Rng;
 use std::ops::{Add, Mul, Sub};
 use std::{fmt::Display, ops};
+use crate::aabb::Axis;
 
 pub type Color = Vec3;
 
@@ -77,6 +78,14 @@ impl Vec3 {
 
     pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn get_axis(&self, axis: Axis) -> f64 {
+        match axis {
+            Axis::X => self.x,
+            Axis::Y => self.y,
+            Axis::Z => self.z,
+        }
     }
 }
 
