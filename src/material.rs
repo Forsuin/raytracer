@@ -4,7 +4,7 @@ use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 
 pub trait Material: Sync {
-    fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, _ray: &Ray, _hit: &HitRecord) -> Option<(Ray, Color)> {
         None
     }
 }
@@ -30,7 +30,7 @@ impl Material for Lambertian {
             direction = hit.normal;
         }
 
-        let scattered = Ray::new(hit.point, direction);
+        let scattered = Ray::new(hit.point, direction, ray.time);
         let attenuation = self.albedo;
 
         Some((scattered, attenuation))
@@ -55,7 +55,7 @@ impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
         let reflected = reflect(&ray.direction, &hit.normal);
         let reflected = reflected.unit_vector() + (self.fuzz * random_unit_vector());
-        let scattered = Ray::new(hit.point, reflected);
+        let scattered = Ray::new(hit.point, reflected, ray.time);
         let attenuation = self.albedo;
 
         if scattered.direction.dot(&hit.normal) < 0. {
@@ -100,7 +100,7 @@ impl Material for Dialetric {
         let cannot_reflect = ri * sin_theta > 1.0;
         let direction: Vec3;
 
-        if (cannot_reflect || Self::reflectance(cos_theta, ri) > random::<f64>()) {
+        if cannot_reflect || Self::reflectance(cos_theta, ri) > random::<f64>() {
             direction = reflect(&unit_direction, &hit.normal);
         }
         else {
@@ -108,7 +108,7 @@ impl Material for Dialetric {
         }
 
 
-        let scattered = Ray::new(hit.point, direction);
+        let scattered = Ray::new(hit.point, direction, ray.time);
 
         Some((scattered, attenuation))
     }
@@ -125,6 +125,7 @@ fn random_unit_vector() -> Vec3 {
     }
 }
 
+#[allow(dead_code)]
 fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
     let on_unit_sphere = random_unit_vector();
     if on_unit_sphere.dot(normal) > 0.0 {

@@ -6,15 +6,23 @@ use crate::vec3::Vec3;
 use std::sync::Arc;
 
 pub struct Sphere {
-    center: Vec3,
+    center: Ray,
     radius: f64,
-    material: Arc<dyn Material + Send>
+    material: Arc<dyn Material + Send>,
 }
 
 impl Sphere {
     pub fn new(center: Vec3, radius: f64, material: Arc<dyn Material + Send>) -> Self {
         Self {
-            center,
+            center: Ray::new(center, Vec3::ZERO, 0.0),
+            radius: f64::max(0.0, radius),
+            material: Arc::clone(&material),
+        }
+    }
+
+    pub fn new_moving(begin_loc: Vec3, end_loc: Vec3, radius: f64, material: Arc<dyn Material + Send>) -> Self {
+        Self {
+            center: Ray::new(begin_loc, end_loc - begin_loc, 0.0),
             radius: f64::max(0.0, radius),
             material: Arc::clone(&material),
         }
@@ -23,7 +31,8 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
-        let oc = self.center - ray.origin;
+        let current_center = self.center.at(ray.time);
+        let oc = current_center- ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -55,7 +64,7 @@ impl Hittable for Sphere {
             front_face: false,
         };
 
-        let outward_normal = (hr.point - self.center) / self.radius;
+        let outward_normal = (hr.point - current_center) / self.radius;
         hr.set_face_normal(ray, outward_normal);
 
         Some(hr)

@@ -26,17 +26,19 @@ fn main() {
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
                     sphere_material = Arc::new(Lambertian::new(albedo));
+                    let end_center = center + Vec3::new(0., thread_rng().gen_range(0.0..=0.5), 0.0);
+                    world.add(Sphere::new_moving(center, end_center, 0.2, sphere_material));
                 }
                 else if choose_mat < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = thread_rng().gen_range(0.0..=0.5);
                     sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    world.add(Sphere::new(center, 0.2, sphere_material));
                 }
                 else {
                     sphere_material = Arc::new(Dialetric::new(1.5));
+                    world.add(Sphere::new(center, 0.2, sphere_material));
                 }
-
-                world.add(Sphere::new(center, 0.2, sphere_material));
             }
         }
     }
@@ -53,8 +55,8 @@ fn main() {
     let mut camera = Camera::new();
 
     camera.aspect_ratio = 16.0 / 9.0;
-    camera.width = 1200;
-    camera.samples_per_pixel = 500;
+    camera.width = 400;
+    camera.samples_per_pixel = 100;
     camera.max_depth = 50;
 
     camera.vfov = 20.0;
