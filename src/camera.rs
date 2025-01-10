@@ -3,6 +3,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 use rand::{random, Rng};
+#[cfg(not(feature = "singlethread"))]
 use rayon::prelude::*;
 
 #[derive(Default)]
@@ -51,6 +52,7 @@ impl Camera {
         }
     }
 
+    #[cfg(not(feature = "singlethread"))]
     fn render_band(&self, band: &mut [Vec3], world: &HittableList, y: i32) {
         for x in 0..self.width {
             let mut pixel_color = Color::ZERO;
@@ -69,39 +71,45 @@ impl Camera {
 
         // Render
 
-        let mut pixels = vec![Vec3::ZERO; (self.width * self.height) as usize];
-        let mut bands: Vec<(usize, &mut [Vec3])> = pixels.chunks_mut(self.width as usize).enumerate().collect();
+        #[cfg(not(feature = "singlethread"))] {
+            let mut pixels = vec![Vec3::ZERO; (self.width * self.height) as usize];
+            let bands: Vec<(usize, &mut [Vec3])> = pixels.chunks_mut(self.width as usize).enumerate().collect();
 
 
-        println!("P3\n{} {}\n255", self.width, self.height);
+            println!("P3\n{} {}\n255", self.width, self.height);
 
 
-        bands.into_par_iter().for_each(|(i, band)| {
-            self.render_band(band, world, i as i32);
-        });
+            bands.into_par_iter().for_each(|(i, band)| {
+                self.render_band(band, world, i as i32);
+            });
 
-        // for y in 0..self.height {
-        //     if y % 10 == 0 {
-        //         eprintln!("\rScanlines Remaining: {}", (self.height - y));
-        //     }
-        //     for x in 0..self.width {
-        //         let mut pixel_color = Color::ZERO;
-        //
-        //         for _sample in 0..self.samples_per_pixel {
-        //             let ray = self.get_ray(x, y);
-        //             pixel_color += self.ray_color(&ray, self.max_depth, world);
-        //         }
-        //
-        //         write_color(&(self.pixel_samples_scale * pixel_color));
-        //     }
-        // }
-
-
-        for pixel in pixels {
-            write_color(&pixel);
+            for pixel in pixels {
+                write_color(&pixel);
+            }
         }
 
-        // eprintln!("\rDone!");
+
+        #[cfg(feature = "singlethread")] {
+            println!("P3\n{} {}\n255", self.width, self.height);
+
+            for y in 0..self.height {
+                if y % 10 == 0 {
+                    eprintln!("\rScanlines Remaining: {}", (self.height - y));
+                }
+                for x in 0..self.width {
+                    let mut pixel_color = Color::ZERO;
+
+                    for _sample in 0..self.samples_per_pixel {
+                        let ray = self.get_ray(x, y);
+                        pixel_color += self.ray_color(&ray, self.max_depth, world);
+                    }
+
+                    write_color(&(self.pixel_samples_scale * pixel_color));
+                }
+            }
+
+            eprintln!("\rDone!");
+        }
     }
 
     fn initialize(&mut self) {
@@ -177,8 +185,9 @@ impl Camera {
             + ((y as f64 + offset.y) * self.pixel_delta_v);
         let ray_origin = if self.defocus_angle <= 0.0 { self.center } else { self.defocus_disk_sample() };
         let ray_direction = pixel_sample - ray_origin;
+        let ray_time = random();
 
-        Ray::new(ray_origin, ray_direction)
+        Ray::new(ray_origin, ray_direction, ray_time)
     }
 
     fn defocus_disk_sample(&self) -> Vec3 {
